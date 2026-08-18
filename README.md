@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>एरोप्लेन गेम</title>
+    <title>एरोप्लेन गेम - Full Screen</title>
     <style>
         body, html {
             margin: 0;
@@ -12,12 +11,11 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #87CEEB; /* आसमान का रंग */
+            background-color: #87CEEB;
             font-family: 'Arial', sans-serif;
-            touch-action: none; /* मोबाइल पर जूम और स्क्रॉल रोके */
+            touch-action: none;
         }
 
-        /* मोबाइल सीधा होने पर यह चेतावनी दिखेगी */
         #orientation-warning {
             display: none;
             position: absolute;
@@ -93,18 +91,16 @@
 </head>
 <body>
 
-    <!-- रोटेट स्क्रीन वार्निंग -->
     <div id="orientation-warning">
         <div style="font-size: 50px;">🔄</div>
         <p>गेम खेलने के लिए मोबाइल को<br>आड़ा (Landscape) पकड़ें!</p>
     </div>
 
-    <!-- गेम एरिया -->
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="ui-layer">
             <div id="score-board">Score: <span id="score">0</span></div>
-            <button id="startBtn" class="btn">🚀 Start Game</button>
+            <button id="startBtn" class="btn">🚀 Start Game (Full Screen)</button>
         </div>
     </div>
 
@@ -119,7 +115,6 @@
         let gameRunning = false;
         let pipes = [];
 
-        // स्क्रीन साइज सेट करें
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -127,17 +122,23 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // --- साउंड सिस्टम (बिना किसी ऑडियो फाइल के) ---
+        // --- फुल स्क्रीन करने का फंक्शन ---
+        function toggleFullScreen() {
+            let elem = document.documentElement;
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                if (elem.requestFullscreen) { elem.requestFullscreen(); }
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+            }
+        }
+
+        // --- साउंड सिस्टम ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
-            }
-            if(audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new AudioContext();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playJumpSound() {
@@ -149,10 +150,8 @@
             osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
         function playCrashSound() {
@@ -164,10 +163,8 @@
             osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         }
 
         // --- प्लेन की सेटिंग ---
@@ -186,11 +183,7 @@
             update: function() {
                 this.velocity += this.gravity;
                 this.y += this.velocity;
-                
-                // जमीन या आसमान से टकराना
-                if (this.y + this.height >= canvas.height || this.y <= 30) {
-                    gameOver();
-                }
+                if (this.y + this.height >= canvas.height || this.y <= 30) { gameOver(); }
             },
             flap: function() {
                 this.velocity = this.lift;
@@ -202,47 +195,36 @@
         function drawPipes() {
             for (let i = 0; i < pipes.length; i++) {
                 let p = pipes[i];
-                p.x -= 4; // स्पीड
+                p.x -= 4; 
 
-                // खंभे बनाना
                 ctx.fillStyle = "#2ecc71"; 
                 ctx.fillRect(p.x, 0, p.width, p.top);
                 ctx.fillRect(p.x, canvas.height - p.bottom, p.width, p.bottom);
 
-                // टक्कर चेक करना (Collision Detection)
+                // टक्कर चेक करना
                 if (plane.x + 40 > p.x && plane.x < p.x + p.width) {
-                    // चूँकि इमोजी ऊपर से ड्रॉ होता है, थोड़ा मार्जिन रखा है
-                    if (plane.y - 30 < p.top || plane.y + 10 > canvas.height - p.bottom) {
-                        gameOver();
-                    }
+                    if (plane.y - 30 < p.top || plane.y + 10 > canvas.height - p.bottom) { gameOver(); }
                 }
 
-                // स्कोर बढ़ाना
+                // स्कोर
                 if (p.x === 96) {
                     score++;
                     scoreElement.innerText = score;
                 }
 
-                // स्क्रीन से बाहर जाने पर हटा दें
                 if (p.x + p.width < 0) {
                     pipes.shift();
                     i--;
                 }
             }
 
-            // नए खंभे जोड़ना
             if (frames % 100 === 0) {
-                let gap = 200; // प्लेन के निकलने की जगह
+                let gap = 200;
                 let minHeight = 50;
                 let maxHeight = canvas.height - gap - minHeight;
                 let topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
                 
-                pipes.push({
-                    x: canvas.width,
-                    width: 60,
-                    top: topHeight,
-                    bottom: canvas.height - (topHeight + gap)
-                });
+                pipes.push({ x: canvas.width, width: 60, top: topHeight, bottom: canvas.height - (topHeight + gap) });
             }
         }
 
@@ -269,7 +251,8 @@
 
         // --- स्टार्ट और कंट्रोल्स ---
         function startGame() {
-            initAudio(); // साउंड शुरू करें
+            toggleFullScreen(); // बटन दबाते ही फुल स्क्रीन होगा
+            initAudio(); 
             plane.y = canvas.height / 2;
             plane.velocity = 0;
             pipes = [];
@@ -281,10 +264,7 @@
             loop();
         }
 
-        // माउस क्लिक और मोबाइल टच
-        window.addEventListener("mousedown", () => {
-            if(gameRunning) plane.flap();
-        });
+        window.addEventListener("mousedown", () => { if(gameRunning) plane.flap(); });
         window.addEventListener("touchstart", (e) => {
             if(gameRunning) {
                 e.preventDefault();
