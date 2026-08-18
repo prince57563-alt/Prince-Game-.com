@@ -1188,3 +1188,592 @@ showGames();
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prince Game Zone - 100 Games</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#0b1020;color:#fff}
+header{padding:25px 15px;text-align:center;background:linear-gradient(135deg,#7b2ff7,#00a8ff)}
+header h1{margin:0;font-size:30px}
+.wrap{max-width:1200px;margin:auto;padding:15px}
+#search{width:100%;padding:16px;border:0;border-radius:15px;font-size:17px;outline:0;margin-bottom:15px}
+.filters{display:flex;gap:8px;overflow:auto;margin-bottom:15px}
+.filters button{border:0;border-radius:20px;padding:10px 16px;background:#242a43;color:white;white-space:nowrap}
+.filters button.active{background:#7b2ff7}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}
+.card{background:#171d34;border-radius:18px;padding:18px;text-align:center;box-shadow:0 5px 18px #0006}
+.icon{font-size:52px}.card h2{font-size:19px;margin:8px 0}
+.card p{color:#aab0c0;height:35px}
+.play,.btn{border:0;border-radius:12px;padding:12px 18px;background:#2678ff;color:white;font-size:16px;cursor:pointer}
+.play{width:100%}
+#screen{display:none;background:#171d34;border-radius:20px;padding:20px;text-align:center;max-width:800px;margin:20px auto}
+.back{background:#363c55;color:white;border:0;padding:11px 18px;border-radius:10px;cursor:pointer}
+canvas{background:#07101d;border-radius:15px;max-width:100%;touch-action:none}
+.choice{padding:13px 18px;margin:5px;border:0;border-radius:12px;background:#303754;color:#fff;font-size:18px;cursor:pointer}
+.input{padding:13px;border:0;border-radius:10px;font-size:17px;max-width:280px;width:90%}
+.msg{font-size:20px;margin:15px;min-height:30px}
+.score{font-size:22px;color:#ffd54f;margin:12px}
+footer{text-align:center;padding:30px;color:#888}
+.ludo{display:grid;grid-template-columns:repeat(3,1fr);max-width:420px;margin:auto}
+.ludo div{height:70px;border:1px solid #555;display:flex;align-items:center;justify-content:center;font-size:24px}
+.carrom{position:relative;width:min(90vw,480px);height:min(90vw,480px);margin:auto;background:#c9904b;border:15px solid #5b3017;border-radius:20px}
+.hole{position:absolute;width:35px;height:35px;background:#111;border-radius:50%}
+.h1{top:-5px;left:-5px}.h2{top:-5px;right:-5px}.h3{bottom:-5px;left:-5px}.h4{bottom:-5px;right:-5px}
+.disk{position:absolute;width:35px;height:35px;border-radius:50%;background:#222;left:50%;top:50%;transform:translate(-50%,-50%)}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🎮 Prince Game Zone</h1>
+<p>100 Games • Racing • Ludo • Carrom • Makeup • Kitchen • Action</p>
+</header>
+
+<div class="wrap">
+<input id="search" placeholder="🔎 Search Games...">
+<div class="filters" id="filters"></div>
+<div id="games" class="grid"></div>
+
+<div id="screen">
+<button class="back" onclick="home()">← सभी गेम</button>
+<h2 id="title"></h2>
+<div id="area"></div>
+</div>
+</div>
+
+<footer>🎮 Prince Game Zone</footer>
+
+<script>
+
+const games=[
+["Ludo","🎲","Board","ludo"],
+["Ludo Challenge","🎲","Board","ludo"],
+["Carrom Board","🎯","Board","carrom"],
+["Carrom Master","🎯","Board","carrom"],
+["Chess","♟️","Board","chess"],
+["Checkers","⚫","Board","checkers"],
+["Domino","🀫","Board","domino"],
+["Sudoku","🔢","Puzzle","sudoku"],
+["8 Ball Pool","🎱","Sports","pool"],
+["Table Tennis","🏓","Sports","pong"],
+["Football","⚽","Sports","football"],
+["Penalty Shoot","🥅","Sports","penalty"],
+["Basketball","🏀","Sports","basket"],
+["Cricket","🏏","Sports","cricket"],
+["Boxing","🥊","Action","boxing"],
+["Sword Battle","⚔️","Action","sword"],
+["Target Shooter","🎯","Action","shooter"],
+["Space Shooter","🚀","Action","space"],
+["Alien Blaster","👾","Action","alien"],
+["Zombie Survival","🧟","Action","zombie"],
+["Tank Battle","🛡️","Action","tank"],
+["Robot Battle","🤖","Action","robot"],
+["Ninja Game","🥷","Action","ninja"],
+["Archery","🏹","Action","archery"],
+["Airplane Shooter","✈️","Action","plane"],
+["Car Racing","🏎️","Racing","racing"],
+["Bike Racing","🏍️","Racing","bike"],
+["Formula Racer","🏁","Racing","racing"],
+["Traffic Racer","🚗","Racing","traffic"],
+["Monster Truck","🚙","Racing","truck"],
+["Drift Challenge","💨","Racing","drift"],
+["Motorcycle Rush","🏍️","Racing","bike"],
+["Endless Runner","🏃","Arcade","runner"],
+["Jump Runner","🦘","Arcade","runner"],
+["Ninja Runner","🥷","Arcade","runner"],
+["Snake","🐍","Arcade","snake"],
+["Snake Master","🐍","Arcade","snake"],
+["Brick Breaker","🧱","Arcade","brick"],
+["Space Runner","🌌","Arcade","space"],
+["Flappy Bird Style","🐦","Arcade","flappy"],
+["Dino Runner","🦖","Arcade","runner"],
+["Helicopter","🚁","Arcade","helicopter"],
+["Boat Race","🚤","Racing","boat"],
+["Fishing","🎣","Arcade","fishing"],
+["Bubble Shooter","🫧","Puzzle","bubble"],
+["Match 3","💎","Puzzle","match3"],
+["2048","🔢","Puzzle","2048"],
+["Tetris","🧱","Puzzle","tetris"],
+["Maze","🌀","Puzzle","maze"],
+["Memory Cards","🃏","Puzzle","memory"],
+["Word Game","🔤","Puzzle","word"],
+["Math Quiz","🧠","Quiz","math"],
+["India Quiz","🇮🇳","Quiz","quiz"],
+["Science Quiz","🔬","Quiz","quiz"],
+["Animal Quiz","🐯","Quiz","quiz"],
+["Emoji Quiz","😀","Quiz","emoji"],
+["General Knowledge","📚","Quiz","quiz"],
+["Color Match","🎨","Puzzle","color"],
+["Number Guess","🔢","Puzzle","guess"],
+["Rock Paper Scissors","✊","Classic","rps"],
+["Tic Tac Toe","⭕","Classic","tic"],
+["Connect Four","🔴","Classic","connect"],
+["Hangman","🔤","Word","hangman"],
+["Typing Test","⌨️","Skill","typing"],
+["Reaction Test","⚡","Skill","reaction"],
+["Click Challenge","👆","Skill","click"],
+["Fast Tap","👆","Skill","tap"],
+["Dice Game","🎲","Luck","dice"],
+["Coin Flip","🪙","Luck","coin"],
+["Higher Lower","📈","Luck","higher"],
+["Lucky Wheel","🎡","Luck","wheel"],
+["Makeup Studio","💄","Makeup","makeup"],
+["Makeup Artist","💋","Makeup","makeup"],
+["Beauty Salon","💅","Makeup","salon"],
+["Nail Art","💅","Makeup","nails"],
+["Hair Salon","💇","Makeup","hair"],
+["Dress Up","👗","Fashion","dress"],
+["Fashion Designer","👚","Fashion","fashion"],
+["Princess Dress Up","👸","Fashion","dress"],
+["Wedding Makeover","👰","Makeup","makeup"],
+["Cooking Kitchen","👩‍🍳","Kitchen","kitchen"],
+["Pizza Maker","🍕","Kitchen","pizza"],
+["Burger Maker","🍔","Kitchen","burger"],
+["Cake Maker","🎂","Kitchen","cake"],
+["Ice Cream Shop","🍦","Kitchen","icecream"],
+["Juice Maker","🥤","Kitchen","juice"],
+["Restaurant Chef","👨‍🍳","Kitchen","restaurant"],
+["Sushi Maker","🍣","Kitchen","sushi"],
+["Pizza Restaurant","🍕","Kitchen","pizza"],
+["Cupcake Maker","🧁","Kitchen","cake"],
+["Fruit Salad","🍓","Kitchen","salad"],
+["Candy Factory","🍬","Kitchen","candy"],
+["Coffee Shop","☕","Kitchen","coffee"],
+["Pancake Maker","🥞","Kitchen","pancake"],
+["Burger Restaurant","🍔","Kitchen","burger"],
+["Kitchen Rush","🍳","Kitchen","kitchen"],
+["Farm Game","🚜","Simulation","farm"],
+["Pet Care","🐶","Simulation","pet"],
+["Doctor Game","🩺","Simulation","doctor"],
+["Hospital Game","🏥","Simulation","hospital"],
+["Firefighter","🚒","Simulation","fire"],
+["Police Chase","🚓","Action","police"],
+["Treasure Hunt","💰","Adventure","treasure"],
+["Island Adventure","🏝️","Adventure","island"],
+["Castle Adventure","🏰","Adventure","castle"],
+["Space Adventure","🌌","Adventure","space"],
+["Final Challenge","🏆","Challenge","final"]
+];
+
+const box=document.getElementById("games");
+const search=document.getElementById("search");
+const filters=document.getElementById("filters");
+let category="All";
+
+const cats=["All",...new Set(games.map(x=>x[2]))];
+
+cats.forEach((c,i)=>{
+ const b=document.createElement("button");
+ b.innerText=c==="All"?"🎮 सभी":c;
+ if(i===0)b.className="active";
+ b.onclick=()=>{
+  category=c;
+  document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  show();
+ };
+ filters.appendChild(b);
+});
+
+function show(){
+ const q=search.value.toLowerCase();
+ const list=games.filter(g=>
+  (category==="All"||g[2]===category)&&
+  (g[0].toLowerCase().includes(q)||g[2].toLowerCase().includes(q))
+ );
+ box.innerHTML=list.length?list.map(g=>{
+  const i=games.indexOf(g);
+  return `<div class="card">
+  <div class="icon">${g[1]}</div>
+  <h2>${g[0]}</h2>
+  <p>${g[2]}</p>
+  <button class="play" onclick="openGame(${i})">▶ PLAY</button>
+  </div>`;
+ }).join(""):"<div class='msg'>😔 गेम नहीं मिला</div>";
+}
+search.oninput=show;
+
+function openGame(i){
+ document.getElementById("games").style.display="none";
+ document.getElementById("filters").style.display="none";
+ search.style.display="none";
+ document.getElementById("screen").style.display="block";
+ document.getElementById("title").innerText=games[i][1]+" "+games[i][0];
+ start(games[i][3]);
+ window.scrollTo(0,0);
+}
+
+function home(){
+ document.getElementById("screen").style.display="none";
+ document.getElementById("games").style.display="grid";
+ document.getElementById("filters").style.display="flex";
+ search.style.display="block";
+ show();
+}
+
+const area=document.getElementById("area");
+
+function start(t){
+ area.innerHTML="";
+ if(t==="ludo")ludo();
+ else if(t==="carrom")carrom();
+ else if(t==="racing"||t==="bike"||t==="traffic"||t==="truck"||t==="drift")racing();
+ else if(t==="makeup"||t==="salon"||t==="nails"||t==="hair")makeup();
+ else if(t==="kitchen"||t==="pizza"||t==="burger"||t==="cake"||t==="icecream"||t==="juice"||t==="restaurant"||t==="sushi"||t==="salad"||t==="candy"||t==="coffee"||t==="pancake")kitchen(t);
+ else if(t==="shooter"||t==="space"||t==="alien"||t==="zombie"||t==="tank"||t==="robot"||t==="ninja"||t==="archery"||t==="plane"||t==="police")shooter();
+ else if(t==="snake")snake();
+ else if(t==="brick")brick();
+ else if(t==="pong")pong();
+ else if(t==="football"||t==="penalty")football();
+ else if(t==="basket")basket();
+ else if(t==="dice")dice();
+ else if(t==="coin")coin();
+ else if(t==="rps")rps();
+ else if(t==="tic")tic();
+ else if(t==="quiz"||t==="math"||t==="emoji")quiz();
+ else if(t==="guess")guess();
+ else if(t==="click"||t==="tap")click();
+ else if(t==="reaction")reaction();
+ else if(t==="memory")memory();
+ else if(t==="color")color();
+ else if(t==="typing")typing();
+ else if(t==="runner")runner();
+ else if(t==="fishing")fishing();
+ else if(t==="bubble")bubble();
+ else if(t==="match3")match3();
+ else if(t==="2048")game2048();
+ else if(t==="wheel")wheel();
+ else if(t==="pet")pet();
+ else if(t==="farm")farm();
+ else if(t==="doctor"||t==="hospital")doctor();
+ else if(t==="fire")fire();
+ else if(t==="treasure"||t==="island"||t==="castle")adventure();
+ else simple(t);
+}
+
+/* LUDO */
+function ludo(){
+ let pos=[0,0,0,0],turn=0;
+ area.innerHTML=`
+ <h2>🎲 Ludo</h2>
+ <div class="ludo">
+ ${Array(9).fill(0).map((_,i)=>`<div id="l${i}">⬜</div>`).join("")}
+ </div>
+ <button class="btn" onclick="rollLudo()">🎲 Dice</button>
+ <div id="lm" class="msg"></div>`;
+ window.rollLudo=()=>{
+  let n=Math.floor(Math.random()*6)+1;
+  turn=(turn+n)%9;
+  document.querySelectorAll(".ludo div").forEach(x=>x.innerText="⬜");
+  document.getElementById("l"+turn).innerText="🔴";
+  document.getElementById("lm").innerText="Dice: "+n;
+ };
+}
+
+/* CARROM */
+function carrom(){
+ area.innerHTML=`
+ <h2>🎯 Carrom Board</h2>
+ <div class="carrom">
+ <div class="hole h1"></div><div class="hole h2"></div>
+ <div class="hole h3"></div><div class="hole h4"></div>
+ <div class="disk"></div>
+ </div>
+ <p>🎯 स्ट्राइकर को टैप करके शॉट लगाएँ</p>
+ <button class="btn" onclick="carromShot()">SHOT</button>
+ <div id="cm" class="msg"></div>`;
+ window.carromShot=()=>{
+  let n=Math.floor(Math.random()*3);
+  document.getElementById("cm").innerText=n===0?"🎉 Coin Pocket!":"🏃 फिर कोशिश करें!";
+ };
+}
+
+/* RACING */
+function racing(){
+ let score=0,pos=2;
+ area.innerHTML=`
+ <div class="big">🏎️</div>
+ <p>कार को बाएँ-दाएँ चलाएँ और obstacles से बचें।</p>
+ <button class="choice" onclick="race('l')">⬅️</button>
+ <button class="choice" onclick="race('r')">➡️</button>
+ <div id="race" class="score">Score: 0</div>`;
+ window.race=d=>{
+  pos+=d==="l"?-1:1;
+  pos=Math.max(0,Math.min(4,pos));
+  score++;
+  document.getElementById("race").innerText=
+   Math.random()<.12?"💥 Crash! Score: "+score:"🏎️ Score: "+score;
+ };
+}
+
+/* MAKEUP */
+function makeup(){
+ area.innerHTML=`
+ <h2>💄 Makeup Studio</h2>
+ <div style="font-size:100px">👩</div>
+ <p>अपना makeup चुनें</p>
+ <button class="choice" onclick="make('💄')">💄 Lipstick</button>
+ <button class="choice" onclick="make('👁️')">👁️ Eye</button>
+ <button class="choice" onclick="make('💇')">💇 Hair</button>
+ <button class="choice" onclick="make('💅')">💅 Nails</button>
+ <div id="make" class="msg"></div>`;
+ window.make=x=>document.getElementById("make").innerText="✨ "+x+" लगाया गया!";
+}
+
+/* KITCHEN */
+function kitchen(t){
+ const items={
+ pizza:"🍕 Pizza",burger:"🍔 Burger",cake:"🎂 Cake",
+ icecream:"🍦 Ice Cream",juice:"🥤 Juice",sushi:"🍣 Sushi",
+ salad:"🥗 Salad",candy:"🍬 Candy",coffee:"☕ Coffee",
+ pancake:"🥞 Pancake",kitchen:"🍳 Dish",restaurant:"👨‍🍳 Meal"
+ };
+ let item=items[t]||"🍳 Food";
+ area.innerHTML=`
+ <h2>👩‍🍳 Kitchen Game</h2>
+ <div class="big">${item}</div>
+ <p>सही ingredients चुनें:</p>
+ <button class="choice" onclick="cook('🥕')">🥕</button>
+ <button class="choice" onclick="cook('🧀')">🧀</button>
+ <button class="choice" onclick="cook('🍅')">🍅</button>
+ <button class="choice" onclick="cook('🌶️')">🌶️</button>
+ <div id="cook" class="msg"></div>`;
+ window.cook=x=>document.getElementById("cook").innerText="👨‍🍳 "+x+" added!";
+}
+
+/* SHOOTING */
+function shooter(){
+ let score=0;
+ area.innerHTML=`
+ <h2>🎯 Target Shooter</h2>
+ <div style="font-size:90px" id="target">🎯</div>
+ <button class="btn" onclick="shoot()">🔫 SHOOT</button>
+ <div id="shot" class="score">Score: 0</div>`;
+ window.shoot=()=>{
+  score++;
+  document.getElementById("target").innerText=
+   ["🎯","💥","⭐","🎯"][Math.floor(Math.random()*4)];
+  document.getElementById("shot").innerText="Score: "+score;
+ };
+}
+
+/* SNAKE */
+function snake(){
+ let score=0;
+ area.innerHTML=`
+ <div class="big">🐍</div>
+ <p>Arrow buttons से snake चलाएँ</p>
+ <button class="choice" onclick="snakeMove()">⬅️</button>
+ <button class="choice" onclick="snakeMove()">➡️</button>
+ <button class="choice" onclick="snakeMove()">⬆️</button>
+ <button class="choice" onclick="snakeMove()">⬇️</button>
+ <div id="sn" class="score">Score: 0</div>`;
+ window.snakeMove=()=>{
+  score++;
+  document.getElementById("sn").innerText="🐍 Score: "+score;
+ };
+}
+
+/* BRICK */
+function brick(){
+ let score=0;
+ area.innerHTML=`
+ <h2>🧱 Brick Breaker</h2>
+ <div id="bricks" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px"></div>
+ <button class="btn" onclick="breakBrick()">BALL 🟠</button>
+ <div id="bm" class="score">Bricks: 25</div>`;
+ let n=25;
+ for(let i=0;i<25;i++)
+  document.getElementById("bricks").innerHTML+=`<div id="b${i}" style="height:35px;background:#ff5252;border-radius:5px"></div>`;
+ window.breakBrick=()=>{
+  if(n>0){
+   n--;
+   document.getElementById("b"+n).style.visibility="hidden";
+   document.getElementById("bm").innerText="Bricks: "+n;
+  }
+ };
+}
+
+/* PONG */
+function pong(){
+ let score=0;
+ area.innerHTML=`
+ <h2>🏓 Ping Pong</h2>
+ <button class="btn" onclick="pongHit()">🏓 HIT</button>
+ <div id="pong" class="score">Score: 0</div>`;
+ window.pongHit=()=>{
+  score++;
+  document.getElementById("pong").innerText="Score: "+score;
+ };
+}
+
+/* FOOTBALL */
+function football(){
+ area.innerHTML=`
+ <h2>⚽ Penalty Kick</h2>
+ <div class="big">🥅</div>
+ <button class="choice" onclick="kick('left')">⬅️</button>
+ <button class="choice" onclick="kick('center')">⬆️</button>
+ <button class="choice" onclick="kick('right')">➡️</button>
+ <div id="fk" class="msg"></div>`;
+ window.kick=x=>{
+  document.getElementById("fk").innerText=
+   Math.random()<.6?"⚽ GOAL! 🎉":"🧤 Saved!";
+ };
+}
+
+/* BASKET */
+function basket(){
+ let s=0;
+ area.innerHTML=`
+ <h2>🏀 Basketball</h2>
+ <button class="btn" onclick="basketShot()">🏀 SHOOT</button>
+ <div id="bs" class="score">Score: 0</div>`;
+ window.basketShot=()=>{
+  if(Math.random()<.6)s++;
+  document.getElementById("bs").innerText=
+   Math.random()<.6?"🏀 Score: "+s:"❌ Miss! Score: "+s;
+ };
+}
+
+/* DICE */
+function dice(){
+ area.innerHTML=`
+ <div class="big" id="die">🎲</div>
+ <button class="btn" onclick="roll()">ROLL</button>`;
+ window.roll=()=>{
+  let n=Math.floor(Math.random()*6);
+  document.getElementById("die").innerText=["⚀","⚁","⚂","⚃","⚄","⚅"][n];
+ };
+}
+
+/* COIN */
+function coin(){
+ area.innerHTML=`
+ <div class="big" id="coin">🪙</div>
+ <button class="btn" onclick="flip()">FLIP</button>
+ <div id="coinm" class="msg"></div>`;
+ window.flip=()=>{
+  document.getElementById("coinm").innerText=
+   Math.random()<.5?"😀 HEADS":"🔄 TAILS";
+ };
+}
+
+/* RPS */
+function rps(){
+ area.innerHTML=`
+ <button class="choice" onclick="playR('✊')">✊</button>
+ <button class="choice" onclick="playR('✋')">✋</button>
+ <button class="choice" onclick="playR('✌️')">✌️</button>
+ <div id="rps" class="msg"></div>`;
+ window.playR=p=>{
+  let c=["✊","✋","✌️"][Math.floor(Math.random()*3)];
+  document.getElementById("rps").innerText=
+   p===c?"🤝 Draw!":"आप: "+p+" | Computer: "+c;
+ };
+}
+
+/* TIC */
+function tic(){
+ let b=Array(9).fill("");
+ area.innerHTML=`
+ <div style="display:grid;grid-template-columns:repeat(3,1fr);max-width:330px;margin:auto">
+ ${b.map((_,i)=>`<button class="choice" id="t${i}" style="height:80px" onclick="tt(${i})"></button>`).join("")}
+ </div><div id="ticm" class="msg"></div>`;
+ window.tt=i=>{
+  if(b[i])return;
+  b[i]="X";document.getElementById("t"+i).innerText="X";
+  let e=b.map((x,i)=>x?null:i).filter(x=>x!==null);
+  if(e.length){
+   let c=e[Math.floor(Math.random()*e.length)];
+   b[c]="O";document.getElementById("t"+c).innerText="O";
+  }
+ };
+}
+
+/* QUIZ */
+function quiz(){
+ let q=[
+ ["भारत की राजधानी?",["दिल्ली","मुंबई","जयपुर"],0],
+ ["राष्ट्रीय पक्षी?",["मोर","तोता","कबूतर"],0],
+ ["2+2?",["3","4","5"],1],
+ ["पानी का सूत्र?",["H2O","CO2","O2"],0]
+ ][Math.floor(Math.random()*4)];
+ area.innerHTML=`<h2>${q[0]}</h2>
+ ${q[1].map((x,i)=>`<button class="choice" onclick="qa(${i},${q[2]})">${x}</button>`).join("")}
+ <div id="qm" class="msg"></div>`;
+ window.qa=(a,b)=>document.getElementById("qm").innerText=a===b?"🎉 सही!":"❌ गलत!";
+}
+
+/* GUESS */
+function guess(){
+ let n=Math.floor(Math.random()*50)+1;
+ area.innerHTML=`
+ <h2>🔢 Number Guess</h2>
+ <input class="input" id="guess">
+ <button class="btn" onclick="gcheck()">CHECK</button>
+ <div id="gm" class="msg"></div>`;
+ window.gcheck=()=>{
+  let v=+document.getElementById("guess").value;
+  document.getElementById("gm").innerText=v===n?"🎉 सही!":v<n?"⬆️ बड़ा नंबर":"⬇️ छोटा नंबर";
+ };
+}
+
+/* CLICK */
+function click(){
+ let s=0;
+ area.innerHTML=`<button class="btn" onclick="clk()">👆 CLICK</button><div id="clk" class="score">0</div>`;
+ window.clk=()=>{
+  s++;
+  document.getElementById("clk").innerText=s;
+ };
+}
+
+/* REACTION */
+function reaction(){
+ area.innerHTML=`
+ <button class="btn" id="react" onclick="react()">WAIT</button>
+ <div id="rm" class="msg"></div>`;
+ let ready=false,start;
+ setTimeout(()=>{
+  ready=true;start=Date.now();
+  document.getElementById("react").innerText="CLICK!";
+ },1000+Math.random()*2000);
+ window.react=()=>{
+  document.getElementById("rm").innerText=
+   ready?"⚡ "+(Date.now()-start)+" ms":"😅 Too Early!";
+ };
+}
+
+/* MEMORY */
+function memory(){
+ let a=["🍎","🍌","🍇","🍓"].concat(["🍎","🍌","🍇","🍓"]).sort(()=>Math.random()-.5);
+ area.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+ ${a.map((x,i)=>`<button class="choice" id="m${i}" onclick="mf(${i})">❓</button>`).join("")}</div>`;
+ let first=null;
+ window.mf=i=>{
+  let b=document.getElementById("m"+i);
+  b.innerText=a[i];
+  if(first===null)first=i;
+  else{
+   if(a[first]!==a[i])setTimeout(()=>{
+    document.getElementById("m"+first).innerText="❓";
+    b.innerText="❓";
+   },500);
+   first=null;
+  }
+ };
+}
+
+/* COLOR */
+function color(){
+ let x=["🔴","🔵","🟢","🟡"][Math.floor(Math.random()*4)];
+ area.innerHTML=`
+ <div class="big">${x}</div>
+ <button class="choice" onclick="colorAns('🔴')">🔴</button>
+ <butt
