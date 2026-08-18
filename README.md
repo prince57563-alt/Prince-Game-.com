@@ -3,277 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>एरोप्लेन गेम - Full Screen</title>
+    <title>Goli Maar Game</title>
     <style>
-        body, html {
+        /* Full screen aur styling ka code */
+        body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
             overflow: hidden;
-            background-color: #87CEEB;
-            font-family: 'Arial', sans-serif;
-            touch-action: none;
+            background-color: #2c3e50;
+            font-family: Arial, sans-serif;
+            touch-action: none; /* Mobile par zoom/scroll band karne ke liye */
         }
-
-        #orientation-warning {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #2c3e50;
-            color: white;
-            z-index: 1000;
-            text-align: center;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        @media screen and (orientation: portrait) {
-            #orientation-warning { display: flex; }
-            #game-container { display: none; }
-        }
-
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
         canvas {
             display: block;
-            width: 100%;
-            height: 100%;
         }
-
-        #ui-layer {
+        /* Buttons ki styling */
+        .controls {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            bottom: 30px;
+            width: 100%;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            pointer-events: none;
+            justify-content: space-around;
+            pointer-events: none; /* Taki canvas par bhi touch kaam kare */
         }
-
+        .btn {
+            pointer-events: auto;
+            padding: 20px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            user-select: none;
+            cursor: pointer;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        #btn-move {
+            background-color: #3498db; /* Neela rang */
+        }
+        #btn-shoot {
+            background-color: #e74c3c; /* Laal rang */
+        }
         #score-board {
             position: absolute;
             top: 20px;
             left: 20px;
-            font-size: 30px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 4px #000;
-        }
-
-        .btn {
-            padding: 15px 40px;
+            color: white;
             font-size: 24px;
             font-weight: bold;
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            pointer-events: auto;
-            cursor: pointer;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div id="orientation-warning">
-        <div style="font-size: 50px;">🔄</div>
-        <p>गेम खेलने के लिए मोबाइल को<br>आड़ा (Landscape) पकड़ें!</p>
-    </div>
-
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="ui-layer">
-            <div id="score-board">Score: <span id="score">0</span></div>
-            <button id="startBtn" class="btn">🚀 Start Game (Full Screen)</button>
-        </div>
+    <div id="score-board">Score: <span id="score">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="controls">
+        <button id="btn-move" class="btn">🚀 Aage Badho</button>
+        <button id="btn-shoot" class="btn">🔫 Goli Maaro</button>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const startBtn = document.getElementById("startBtn");
-        const scoreElement = document.getElementById("score");
 
-        let frames = 0;
+        // Full screen set karna
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
         let score = 0;
-        let gameRunning = false;
-        let pipes = [];
+        let isMoving = false;
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        // --- फुल स्क्रीन करने का फंक्शन ---
-        function toggleFullScreen() {
-            let elem = document.documentElement;
-            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-                if (elem.requestFullscreen) { elem.requestFullscreen(); }
-                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
-                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
-            }
-        }
-
-        // --- साउंड सिस्टम ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-
-        function initAudio() {
-            if (!audioCtx) audioCtx = new AudioContext();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playJumpSound() {
-            if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        }
-
-        function playCrashSound() {
-            if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = "sawtooth";
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-        }
-
-        // --- प्लेन की सेटिंग ---
-        const plane = {
-            x: 100,
-            y: canvas.height / 2,
-            width: 60,
-            height: 40,
-            gravity: 0.25,
-            lift: -6,
-            velocity: 0,
-            draw: function() {
-                ctx.font = "50px Arial";
-                ctx.fillText("✈️", this.x, this.y);
-            },
-            update: function() {
-                this.velocity += this.gravity;
-                this.y += this.velocity;
-                if (this.y + this.height >= canvas.height || this.y <= 30) { gameOver(); }
-            },
-            flap: function() {
-                this.velocity = this.lift;
-                playJumpSound();
-            }
+        // Player (Aapka Character)
+        const player = {
+            x: 50,
+            y: canvas.height / 2 - 25,
+            width: 50,
+            height: 50,
+            color: '#2ecc71',
+            speed: 5
         };
 
-        // --- रुकावटें (पहाड़/बिल्डिंग) ---
-        function drawPipes() {
-            for (let i = 0; i < pipes.length; i++) {
-                let p = pipes[i];
-                p.x -= 4; 
+        // Goli aur Dushman (Bullets and Enemies)
+        const bullets = [];
+        const enemies = [];
+        let enemySpawnTimer = 0;
 
-                ctx.fillStyle = "#2ecc71"; 
-                ctx.fillRect(p.x, 0, p.width, p.top);
-                ctx.fillRect(p.x, canvas.height - p.bottom, p.width, p.bottom);
+        // Buttons ke elements
+        const btnMove = document.getElementById('btn-move');
+        const btnShoot = document.getElementById('btn-shoot');
 
-                // टक्कर चेक करना
-                if (plane.x + 40 > p.x && plane.x < p.x + p.width) {
-                    if (plane.y - 30 < p.top || plane.y + 10 > canvas.height - p.bottom) { gameOver(); }
-                }
+        // Aage Badhne ka logic (Touch aur Mouse ke liye)
+        const startMoving = () => isMoving = true;
+        const stopMoving = () => isMoving = false;
+        
+        btnMove.addEventListener('mousedown', startMoving);
+        btnMove.addEventListener('mouseup', stopMoving);
+        btnMove.addEventListener('touchstart', (e) => { e.preventDefault(); startMoving(); });
+        btnMove.addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
 
-                // स्कोर
-                if (p.x === 96) {
-                    score++;
-                    scoreElement.innerText = score;
-                }
+        // Goli Maarne ka logic
+        const shoot = () => {
+            bullets.push({
+                x: player.x + player.width,
+                y: player.y + player.height / 2 - 5,
+                width: 20,
+                height: 10,
+                color: '#f1c40f',
+                speed: 10
+            });
+        };
+        
+        btnShoot.addEventListener('mousedown', shoot);
+        btnShoot.addEventListener('touchstart', (e) => { e.preventDefault(); shoot(); });
 
-                if (p.x + p.width < 0) {
-                    pipes.shift();
+        // Dushman banane ka function
+        function spawnEnemy() {
+            const size = Math.random() * 30 + 20;
+            enemies.push({
+                x: canvas.width,
+                y: Math.random() * (canvas.height - size - 100) + 50, // Button ke area se upar
+                width: size,
+                height: size,
+                color: '#e67e22',
+                speed: Math.random() * 3 + 2
+            });
+        }
+
+        // Game Loop (Jo game ko chalata hai)
+        function update() {
+            // Player movement
+            if (isMoving && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            } else if (!isMoving && player.x > 50) {
+                player.x -= 2; // Piche wapas aane ke liye thoda sa
+            }
+
+            // Goli ki movement
+            for (let i = 0; i < bullets.length; i++) {
+                bullets[i].x += bullets[i].speed;
+                // Screen se bahar jaane par goli hata do
+                if (bullets[i].x > canvas.width) {
+                    bullets.splice(i, 1);
                     i--;
                 }
             }
 
-            if (frames % 100 === 0) {
-                let gap = 200;
-                let minHeight = 50;
-                let maxHeight = canvas.height - gap - minHeight;
-                let topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
+            // Dushman ki movement
+            enemySpawnTimer++;
+            if (enemySpawnTimer > 60) { // Har thodi der mein naya dushman
+                spawnEnemy();
+                enemySpawnTimer = 0;
+            }
+
+            for (let i = 0; i < enemies.length; i++) {
+                enemies[i].x -= enemies[i].speed;
+
+                // Collision Logic (Goli dushman ko lagi ya nahi)
+                for (let j = 0; j < bullets.length; j++) {
+                    if (
+                        bullets[j].x < enemies[i].x + enemies[i].width &&
+                        bullets[j].x + bullets[j].width > enemies[i].x &&
+                        bullets[j].y < enemies[i].y + enemies[i].height &&
+                        bullets[j].height + bullets[j].y > enemies[i].y
+                    ) {
+                        // Dushman mar gaya
+                        enemies.splice(i, 1);
+                        bullets.splice(j, 1);
+                        score += 10;
+                        document.getElementById('score').innerText = score;
+                        i--; // Loop adjust karne ke liye
+                        break;
+                    }
+                }
                 
-                pipes.push({ x: canvas.width, width: 60, top: topHeight, bottom: canvas.height - (topHeight + gap) });
+                // Screen se bahar nikalne par dushman hatao
+                if (enemies[i] && enemies[i].x + enemies[i].width < 0) {
+                    enemies.splice(i, 1);
+                    i--;
+                }
             }
         }
 
-        // --- गेम लूप ---
-        function loop() {
-            if (!gameRunning) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            plane.draw();
-            plane.update();
-            drawPipes();
+        // Screen par draw karne ka function
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Screen saaf karo
 
-            frames++;
-            requestAnimationFrame(loop);
-        }
+            // Draw Player (Aapka dibba)
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
 
-        // --- गेम ओवर ---
-        function gameOver() {
-            gameRunning = false;
-            playCrashSound();
-            startBtn.style.display = "block";
-            startBtn.innerText = "🔄 Play Again";
-        }
-
-        // --- स्टार्ट और कंट्रोल्स ---
-        function startGame() {
-            toggleFullScreen(); // बटन दबाते ही फुल स्क्रीन होगा
-            initAudio(); 
-            plane.y = canvas.height / 2;
-            plane.velocity = 0;
-            pipes = [];
-            score = 0;
-            frames = 0;
-            scoreElement.innerText = score;
-            startBtn.style.display = "none";
-            gameRunning = true;
-            loop();
-        }
-
-        window.addEventListener("mousedown", () => { if(gameRunning) plane.flap(); });
-        window.addEventListener("touchstart", (e) => {
-            if(gameRunning) {
-                e.preventDefault();
-                plane.flap();
+            // Draw Bullets (Goliyan)
+            for (let bullet of bullets) {
+                ctx.fillStyle = bullet.color;
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
+
+            // Draw Enemies (Dushman)
+            for (let enemy of enemies) {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            }
+        }
+
+        // Main game loop chalana
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Window resize hone par adjust karna
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.y = canvas.height / 2 - 25;
         });
 
-        startBtn.addEventListener("click", startGame);
-
+        // Game Start
+        gameLoop();
     </script>
 </body>
 </html>
