@@ -1,4 +1,804 @@
-### AL ###
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prince Game Zone - 100 Games</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;
+ background:#0d1020;color:#fff;
+}
+header{
+ padding:25px 15px;text-align:center;
+ background:linear-gradient(135deg,#6a11cb,#2575fc);
+}
+header h1{margin:0;font-size:30px}
+header p{margin:8px 0}
+.wrap{max-width:1100px;margin:auto;padding:16px}
+#search{
+ width:100%;padding:16px;border:0;border-radius:15px;
+ font-size:17px;outline:0;margin-bottom:16px
+}
+.filters{display:flex;gap:8px;overflow:auto;margin-bottom:18px}
+.filters button{
+ border:0;border-radius:20px;padding:10px 16px;
+ white-space:nowrap;background:#292d48;color:#fff
+}
+.filters button.active{background:#7c3cff}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+ gap:15px
+}
+.card{
+ background:#191d32;border-radius:18px;padding:18px;
+ text-align:center;box-shadow:0 5px 18px #0005
+}
+.icon{font-size:48px}
+.card h2{font-size:19px;margin:8px 0}
+.card p{color:#aaa;font-size:14px;min-height:35px}
+.play,.mainbtn{
+ border:0;border-radius:12px;padding:12px 18px;
+ background:#2879ff;color:white;font-size:16px;cursor:pointer
+}
+.play{width:100%}
+#screen{
+ display:none;background:#191d32;border-radius:20px;
+ padding:20px;text-align:center;max-width:650px;margin:20px auto
+}
+.back{background:#34384f;border:0;color:#fff;padding:10px 16px;
+ border-radius:10px;cursor:pointer;margin-bottom:15px}
+#gameTitle{font-size:25px}
+#gameArea{min-height:250px;padding:10px}
+.big{font-size:30px;margin:15px}
+.choice{
+ padding:14px 20px;margin:5px;border:0;border-radius:12px;
+ background:#303653;color:#fff;font-size:18px;cursor:pointer
+}
+.choice:hover{background:#5149a8}
+input.gameinput{
+ padding:14px;border:0;border-radius:10px;
+ font-size:18px;max-width:280px;width:90%
+}
+.score{font-size:22px;color:#ffd54f;margin:15px}
+.msg{font-size:20px;margin:15px;min-height:30px}
+footer{text-align:center;padding:30px;color:#888}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🎮 Prince Game Zone</h1>
+<p>🔥 100 Games • Search • Play • Have Fun</p>
+</header>
+
+<div class="wrap">
+
+<input id="search" placeholder="🔎 Search Games...">
+
+<div class="filters" id="filters"></div>
+
+<div id="games" class="grid"></div>
+
+<div id="screen">
+<button class="back" onclick="home()">← सभी गेम</button>
+<h2 id="gameTitle"></h2>
+<div id="gameArea"></div>
+</div>
+
+</div>
+
+<footer>🎮 Prince Game Zone • 100 Games</footer>
+
+<script>
+
+/* =========================
+   100 GAMES
+========================= */
+
+const games=[
+["Snake Classic","🐍","Arcade","snake"],
+["Snake Speed","🐍","Arcade","snake"],
+["Snake Master","🐍","Arcade","snake"],
+["Snake Challenge","🐍","Arcade","snake"],
+["Number Guess","🔢","Puzzle","guess"],
+["Secret Number","🔐","Puzzle","guess"],
+["Lucky Number","🍀","Puzzle","guess"],
+["Guess 1-100","🎯","Puzzle","guess"],
+["Math Plus","➕","Math","math"],
+["Math Minus","➖","Math","math"],
+["Math Multiply","✖️","Math","math"],
+["Math Challenge","🧠","Math","math"],
+["Fast Math","⚡","Math","math"],
+["Mental Math","🧮","Math","math"],
+["Easy Quiz","❓","Quiz","quiz"],
+["General Quiz","🌎","Quiz","quiz"],
+["India Quiz","🇮🇳","Quiz","quiz"],
+["Hindi Quiz","📚","Quiz","quiz"],
+["Science Quiz","🔬","Quiz","quiz"],
+["Sports Quiz","⚽","Quiz","quiz"],
+["Animal Quiz","🐯","Quiz","quiz"],
+["Space Quiz","🚀","Quiz","quiz"],
+["History Quiz","🏛️","Quiz","quiz"],
+["Computer Quiz","💻","Quiz","quiz"],
+["Reaction Test","⚡","Skill","reaction"],
+["Fast Reaction","⚡","Skill","reaction"],
+["Super Reaction","🔥","Skill","reaction"],
+["Click Challenge","👆","Skill","click"],
+["Click Master","👆","Skill","click"],
+["10 Second Click","⏱️","Skill","click"],
+["Speed Click","💨","Skill","click"],
+["Rock Paper Scissors","✊","Classic","rps"],
+["RPS Master","✌️","Classic","rps"],
+["RPS Battle","⚔️","Classic","rps"],
+["Odd or Even","🔢","Puzzle","odd"],
+["Odd Even Master","🧠","Puzzle","odd"],
+["Lucky Odd Even","🍀","Puzzle","odd"],
+["Color Challenge","🎨","Skill","color"],
+["Color Master","🌈","Skill","color"],
+["Color Rush","🎨","Skill","color"],
+["Memory Cards","🃏","Memory","memory"],
+["Memory Master","🧠","Memory","memory"],
+["Memory Match","🎴","Memory","memory"],
+["Emoji Memory","😀","Memory","memory"],
+["Quick Memory","⚡","Memory","memory"],
+["Typing Test","⌨️","Skill","typing"],
+["Fast Typing","💨","Skill","typing"],
+["Typing Master","🏆","Skill","typing"],
+["Word Challenge","🔤","Word","word"],
+["Word Master","📖","Word","word"],
+["Word Guess","🔠","Word","word"],
+["Random Word","🎲","Word","word"],
+["Tic Tac Toe","⭕","Classic","tic"],
+["Tic Tac Toe Pro","⭕","Classic","tic"],
+["Tic Tac Toe X","❌","Classic","tic"],
+["Car Dodge","🚗","Arcade","car"],
+["Car Highway","🏎️","Arcade","car"],
+["Traffic Dodge","🚦","Arcade","car"],
+["Road Racer","🏁","Racing","car"],
+["Space Dodge","🚀","Arcade","space"],
+["Space Runner","🌌","Arcade","space"],
+["Rocket Challenge","🚀","Arcade","space"],
+["Catch The Ball","⚽","Arcade","catch"],
+["Catch Stars","⭐","Arcade","catch"],
+["Catch Fruits","🍎","Arcade","catch"],
+["Quick Tap","👆","Skill","tap"],
+["Super Tap","🔥","Skill","tap"],
+["Tap Master","🏆","Skill","tap"],
+["Dice Roll","🎲","Luck","dice"],
+["Lucky Dice","🎲","Luck","dice"],
+["Dice Master","🎲","Luck","dice"],
+["Coin Flip","🪙","Luck","coin"],
+["Lucky Coin","🪙","Luck","coin"],
+["Heads Or Tails","🪙","Luck","coin"],
+["Higher Lower","📈","Puzzle","higher"],
+["High Low Master","🎯","Puzzle","higher"],
+["Card Guess","🃏","Puzzle","higher"],
+["Quick Count","🔢","Math","count"],
+["Count Master","🔢","Math","count"],
+["Number Rush","⚡","Math","count"],
+["Pattern Test","🔷","Puzzle","pattern"],
+["Pattern Master","🧩","Puzzle","pattern"],
+["Sequence Game","🔢","Puzzle","pattern"],
+["True False","✅","Quiz","truefalse"],
+["True False Pro","❌","Quiz","truefalse"],
+["Fact Challenge","💡","Quiz","truefalse"],
+["Emoji Quiz","😀","Quiz","emoji"],
+["Emoji Master","🤩","Quiz","emoji"],
+["Guess Emoji","🎯","Quiz","emoji"],
+["Animal Match","🐶","Memory","match"],
+["Fruit Match","🍎","Memory","match"],
+["Emoji Match","😀","Memory","match"],
+["Color Match","🎨","Memory","match"],
+["Quick Choice","🎯","Skill","choice"],
+["Lucky Choice","🍀","Skill","choice"],
+["Fast Choice","⚡","Skill","choice"],
+["Brain Challenge","🧠","Puzzle","brain"],
+["Brain Master","🧠","Puzzle","brain"],
+["Ultimate Brain","🔥","Puzzle","brain"],
+["Final Challenge","🏆","Challenge","final"]
+];
+
+/* =========================
+   GAME LIST
+========================= */
+
+const gameBox=document.getElementById("games");
+const search=document.getElementById("search");
+const filters=document.getElementById("filters");
+
+let currentCategory="All";
+
+const categories=["All",...new Set(games.map(g=>g[2]))];
+
+categories.forEach((c,i)=>{
+ let b=document.createElement("button");
+ b.innerText=c==="All"?"🎮 सभी":c;
+ if(i===0)b.className="active";
+ b.onclick=()=>{
+  currentCategory=c;
+  document.querySelectorAll(".filters button")
+  .forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  showGames();
+ };
+ filters.appendChild(b);
+});
+
+function showGames(){
+
+ let text=search.value.toLowerCase();
+
+ let result=games.filter(g=>
+  (currentCategory==="All"||g[2]===currentCategory)&&
+  (g[0].toLowerCase().includes(text)||
+   g[2].toLowerCase().includes(text))
+ );
+
+ gameBox.innerHTML="";
+
+ if(!result.length){
+  gameBox.innerHTML=
+  "<div class='msg'>😔 कोई गेम नहीं मिला</div>";
+  return;
+ }
+
+ result.forEach((g)=>{
+  let index=games.indexOf(g);
+
+  gameBox.innerHTML+=`
+  <div class="card">
+   <div class="icon">${g[1]}</div>
+   <h2>${g[0]}</h2>
+   <p>${g[2]} Game</p>
+   <button class="play"
+   onclick="openGame(${index})">▶ PLAY</button>
+  </div>`;
+ });
+}
+
+search.addEventListener("input",showGames);
+
+/* =========================
+   OPEN / HOME
+========================= */
+
+function openGame(index){
+
+ let g=games[index];
+
+ document.getElementById("games").style.display="none";
+ document.getElementById("filters").style.display="none";
+ document.getElementById("search").style.display="none";
+ document.getElementById("screen").style.display="block";
+
+ document.getElementById("gameTitle").innerText=
+ g[1]+" "+g[0];
+
+ startGame(g[3]);
+ window.scrollTo(0,0);
+}
+
+function home(){
+
+ document.getElementById("screen").style.display="none";
+ document.getElementById("games").style.display="grid";
+ document.getElementById("filters").style.display="flex";
+ document.getElementById("search").style.display="block";
+
+ showGames();
+}
+
+/* =========================
+   GAME AREA
+========================= */
+
+const area=document.getElementById("gameArea");
+
+function msg(t){
+ return `<div class="msg">${t}</div>`;
+}
+
+/* =========================
+   START GAME
+========================= */
+
+function startGame(type){
+
+ area.innerHTML="";
+
+ if(type==="guess")guessGame();
+ else if(type==="math")mathGame();
+ else if(type==="quiz")quizGame();
+ else if(type==="reaction")reactionGame();
+ else if(type==="click")clickGame();
+ else if(type==="rps")rpsGame();
+ else if(type==="odd")oddGame();
+ else if(type==="color")colorGame();
+ else if(type==="memory")memoryGame();
+ else if(type==="typing")typingGame();
+ else if(type==="word")wordGame();
+ else if(type==="tic")ticGame();
+ else if(type==="car")carGame();
+ else if(type==="space")spaceGame();
+ else if(type==="catch")catchGame();
+ else if(type==="tap")tapGame();
+ else if(type==="dice")diceGame();
+ else if(type==="coin")coinGame();
+ else if(type==="higher")higherGame();
+ else if(type==="count")countGame();
+ else if(type==="pattern")patternGame();
+ else if(type==="truefalse")trueFalseGame();
+ else if(type==="emoji")emojiGame();
+ else if(type==="match")matchGame();
+ else if(type==="choice")choiceGame();
+ else if(type==="brain")brainGame();
+ else if(type==="final")finalGame();
+ else snakeGame();
+}
+
+/* =========================
+   GUESS
+========================= */
+
+function guessGame(){
+
+ let n=Math.floor(Math.random()*100)+1;
+
+ area.innerHTML=`
+ <div class="big">🔢</div>
+ <p>1 से 100 के बीच छिपा नंबर खोजें।</p>
+ <input class="gameinput" id="gi" type="number">
+ <br><br>
+ <button class="mainbtn" onclick="checkGuess()">Check</button>
+ <div id="gm" class="msg"></div>`;
+
+ window.checkGuess=function(){
+
+  let v=Number(document.getElementById("gi").value);
+  let m=document.getElementById("gm");
+
+  if(v===n)m.innerHTML="🎉 सही जवाब!";
+  else if(v<n)m.innerHTML="⬆️ और बड़ा नंबर";
+  else m.innerHTML="⬇️ और छोटा नंबर";
+ };
+}
+
+/* =========================
+   MATH
+========================= */
+
+function mathGame(){
+
+ let a=Math.floor(Math.random()*30)+1;
+ let b=Math.floor(Math.random()*30)+1;
+ let op=Math.floor(Math.random()*3);
+ let ans;
+
+ if(op===0)ans=a+b;
+ if(op===1){
+  if(b>a)[a,b]=[b,a];
+  ans=a-b;
+ }
+ if(op===2)ans=a*b;
+
+ let symbol=op===0?"+":op===1?"−":"×";
+
+ area.innerHTML=`
+ <div class="big">🧠</div>
+ <h2>${a} ${symbol} ${b} = ?</h2>
+ <input class="gameinput" id="mi" type="number">
+ <br><br>
+ <button class="mainbtn" onclick="mathCheck()">उत्तर</button>
+ <div id="mm" class="msg"></div>`;
+
+ window.mathCheck=function(){
+  let v=Number(document.getElementById("mi").value);
+  document.getElementById("mm").innerHTML=
+   v===ans?"🎉 बिल्कुल सही!":"❌ गलत! सही उत्तर: "+ans;
+ };
+}
+
+/* =========================
+   QUIZ
+========================= */
+
+const quizData=[
+["भारत की राजधानी क्या है?",["दिल्ली","जयपुर","मुंबई","पटना"],0],
+["भारत का राष्ट्रीय पशु?",["शेर","बाघ","हाथी","घोड़ा"],1],
+["भारत का राष्ट्रीय पक्षी?",["मोर","तोता","कबूतर","हंस"],0],
+["पानी का रासायनिक सूत्र?",["CO2","H2O","O2","NaCl"],1],
+["सूर्य किस दिशा से निकलता है?",["पश्चिम","उत्तर","पूर्व","दक्षिण"],2],
+["एक सप्ताह में कितने दिन?",["5","6","7","8"],2],
+["हिंदी दिवस कब?",["14 सितंबर","15 अगस्त","26 जनवरी","2 अक्टूबर"],0],
+["कंप्यूटर का दिमाग किसे कहते हैं?",["RAM","CPU","Mouse","Keyboard"],1],
+["सबसे बड़ा ग्रह?",["पृथ्वी","मंगल","बृहस्पति","शुक्र"],2],
+["पृथ्वी का उपग्रह?",["सूर्य","चंद्रमा","मंगल","शुक्र"],1]
+];
+
+function quizGame(){
+
+ let q=quizData[Math.floor(Math.random()*quizData.length)];
+
+ area.innerHTML=`
+ <h3>${q[0]}</h3>
+ ${q[1].map((x,i)=>
+ `<button class="choice" onclick="quizAnswer(${i},${q[2]})">${x}</button>`
+ ).join("")}
+ <div id="qm" class="msg"></div>`;
+}
+
+window.quizAnswer=function(i,a){
+ document.getElementById("qm").innerHTML=
+ i===a?"🎉 सही जवाब!":"❌ गलत जवाब!";
+};
+
+/* =========================
+ REACTION
+========================= */
+
+function reactionGame(){
+
+ area.innerHTML=`
+ <div class="big">⚡</div>
+ <p>हरा होने पर तुरंत बटन दबाएँ!</p>
+ <button id="react" class="mainbtn"
+ onclick="reactClick()">WAIT...</button>
+ <div id="rm" class="msg"></div>`;
+
+ let start;
+ let ready=false;
+
+ let delay=1000+Math.random()*3000;
+
+ setTimeout(()=>{
+  ready=true;
+  start=Date.now();
+  document.getElementById("react").innerText="CLICK!";
+ },delay);
+
+ window.reactClick=function(){
+
+  if(!ready){
+   document.getElementById("rm").innerText="😅 बहुत जल्दी!";
+   return;
+  }
+
+  let t=Date.now()-start;
+  document.getElementById("rm").innerText=
+  "⚡ Reaction: "+t+" ms";
+ };
+}
+
+/* =========================
+ CLICK
+========================= */
+
+function clickGame(){
+
+ let count=0,time=10,run=false;
+
+ area.innerHTML=`
+ <div class="big">👆</div>
+ <p>10 सेकंड में जितने क्लिक कर सकें!</p>
+ <div class="score" id="cs">0</div>
+ <button id="cb" class="mainbtn">CLICK!</button>
+ <div id="ct">10</div>`;
+
+ document.getElementById("cb").onclick=()=>{
+
+  if(!run){
+   run=true;
+   let timer=setInterval(()=>{
+    time--;
+    document.getElementById("ct").innerText=time;
+
+    if(time<=0){
+     clearInterval(timer);
+     document.getElementById("cb").disabled=true;
+     document.getElementById("ct").innerText=
+     "🏆 Score: "+count;
+    }
+   },1000);
+  }
+
+  if(time>0){
+   count++;
+   document.getElementById("cs").innerText=count;
+  }
+ };
+}
+
+/* =========================
+ RPS
+========================= */
+
+function rpsGame(){
+
+ area.innerHTML=`
+ <p>अपना चुनाव करें:</p>
+ <button class="choice" onclick="rps('✊')">✊</button>
+ <button class="choice" onclick="rps('✋')">✋</button>
+ <button class="choice" onclick="rps('✌️')">✌️</button>
+ <div id="rpsm" class="msg"></div>`;
+
+ window.rps=function(p){
+
+  let c=["✊","✋","✌️"][Math.floor(Math.random()*3)];
+
+  let win=
+  (p==="✊"&&c==="✌️")||
+  (p==="✋"&&c==="✊")||
+  (p==="✌️"&&c==="✋");
+
+  let r=p===c?"🤝 Draw!":win?"🎉 आप जीत गए!":"😅 Computer जीता!";
+
+  document.getElementById("rpsm").innerHTML=
+  `आप ${p} | Computer ${c}<br>${r}`;
+ };
+}
+
+/* =========================
+ ODD EVEN
+========================= */
+
+function oddGame(){
+
+ let n=Math.floor(Math.random()*100)+1;
+ let correct=n%2===0?"सम":"विषम";
+
+ area.innerHTML=`
+ <div class="big">${n}</div>
+ <button class="choice" onclick="oddCheck('सम')">EVEN / सम</button>
+ <button class="choice" onclick="oddCheck('विषम')">ODD / विषम</button>
+ <div id="om" class="msg"></div>`;
+
+ window.oddCheck=function(x){
+  document.getElementById("om").innerText=
+  x===correct?"🎉 सही!":"❌ गलत! सही: "+correct;
+ };
+}
+
+/* =========================
+ COLOR
+========================= */
+
+function colorGame(){
+
+ const colors=[
+ ["🔴","लाल"],["🔵","नीला"],["🟢","हरा"],
+ ["🟡","पीला"],["🟣","बैंगनी"]
+ ];
+
+ let x=colors[Math.floor(Math.random()*colors.length)];
+
+ area.innerHTML=`
+ <div class="big">${x[0]}</div>
+ <p>इस रंग का नाम चुनें:</p>
+ ${colors.map(c=>
+ `<button class="choice" onclick="colorCheck('${c[1]}','${x[1]}')">${c[1]}</button>`
+ ).join("")}
+ <div id="colorm" class="msg"></div>`;
+
+ window.colorCheck=function(a,b){
+  document.getElementById("colorm").innerText=
+  a===b?"🎉 सही!":"❌ गलत!";
+ };
+}
+
+/* =========================
+ MEMORY
+========================= */
+
+function memoryGame(){
+
+ let arr=["🍎","🍌","🍇","🍓","🍉","🥝"];
+ arr=[...arr,...arr].sort(()=>Math.random()-.5);
+
+ let html=`<p>एक जैसे दो कार्ड खोजें</p>
+ <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">`;
+
+ arr.forEach((x,i)=>{
+  html+=`<button id="mc${i}" class="choice"
+  onclick="memoryFlip(${i})">❓</button>`;
+ });
+
+ html+=`</div><div id="mem" class="msg"></div>`;
+
+ area.innerHTML=html;
+
+ let first=null,lock=false;
+
+ window.memoryFlip=function(i){
+
+  if(lock)return;
+
+  let b=document.getElementById("mc"+i);
+
+  if(b.innerText!=="❓")return;
+
+  b.innerText=arr[i];
+
+  if(first===null){
+   first=i;
+   return;
+  }
+
+  let second=i;
+  lock=true;
+
+  if(arr[first]===arr[second]){
+   b.disabled=true;
+   document.getElementById("mc"+first).disabled=true;
+   first=null;lock=false;
+  }else{
+   setTimeout(()=>{
+    b.innerText="❓";
+    document.getElementById("mc"+first).innerText="❓";
+    first=null;lock=false;
+   },600);
+  }
+ };
+}
+
+/* =========================
+ TYPING
+========================= */
+
+function typingGame(){
+
+ let words=[
+ "यीशु","भारत","प्रेम","खेल","सफलता",
+ "दोस्ती","परिवार","आशा","विश्वास","जीवन"
+ ];
+
+ let word=words[Math.floor(Math.random()*words.length)];
+
+ area.innerHTML=`
+ <h2>यह शब्द लिखें:</h2>
+ <div class="big">${word}</div>
+ <input class="gameinput" id="ti">
+ <br><br>
+ <button class="mainbtn" onclick="typeCheck()">Check</button>
+ <div id="tm" class="msg"></div>`;
+
+ window.typeCheck=function(){
+  let v=document.getElementById("ti").value;
+  document.getElementById("tm").innerText=
+  v===word?"🎉 सही लिखा!":"❌ फिर कोशिश करें";
+ };
+}
+
+/* =========================
+ WORD
+========================= */
+
+function wordGame(){
+
+ let words=["कमल","भारत","विद्यालय","सूरज","मित्र","खेल","पानी","पुस्तक"];
+
+ let word=words[Math.floor(Math.random()*words.length)];
+
+ area.innerHTML=`
+ <p>इस शब्द को देखकर याद करें और नीचे लिखें:</p>
+ <div class="big">${word}</div>
+ <input class="gameinput" id="wi">
+ <br><br>
+ <button class="mainbtn" onclick="wordCheck()">जवाब</button>
+ <div id="wm" class="msg"></div>`;
+
+ window.wordCheck=function(){
+  document.getElementById("wm").innerText=
+  document.getElementById("wi").value===word?
+  "🎉 सही!":"❌ गलत!";
+ };
+}
+
+/* =========================
+ TIC TAC TOE
+========================= */
+
+function ticGame(){
+
+ let b=Array(9).fill("");
+
+ area.innerHTML=`
+ <div style="display:grid;grid-template-columns:repeat(3,1fr);max-width:300px;margin:auto;gap:5px">
+ ${b.map((_,i)=>
+ `<button class="choice" id="tt${i}"
+ onclick="tic(${i})" style="height:80px"></button>`).join("")}
+ </div>
+ <div id="ticm" class="msg"></div>`;
+
+ window.tic=function(i){
+
+  if(b[i])return;
+
+  b[i]="X";
+  document.getElementById("tt"+i).innerText="X";
+
+  if(checkWin(b,"X")){
+   document.getElementById("ticm").innerText="🎉 आप जीत गए!";
+   return;
+  }
+
+  let empty=b.map((x,i)=>x?null:i).filter(x=>x!==null);
+
+  if(!empty.length)return;
+
+  let c=empty[Math.floor(Math.random()*empty.length)];
+
+  b[c]="O";
+  document.getElementById("tt"+c).innerText="O";
+
+  if(checkWin(b,"O"))
+   document.getElementById("ticm").innerText="🤖 Computer जीत गया!";
+ };
+}
+
+function checkWin(b,p){
+
+ return [
+ [0,1,2],[3,4,5],[6,7,8],
+ [0,3,6],[1,4,7],[2,5,8],
+ [0,4,8],[2,4,6]
+ ].some(x=>x.every(i=>b[i]===p));
+}
+
+/* =========================
+ CAR
+========================= */
+
+function carGame(){
+
+ area.innerHTML=`
+ <div style="font-size:50px">🚗</div>
+ <p>⬅️ और ➡️ दबाकर कार बचाएँ</p>
+ <button class="choice" onclick="carMove('left')">⬅️</button>
+ <button class="choice" onclick="carMove('right')">➡️</button>
+ <div id="carm" class="msg">🚗 रास्ता साफ है!</div>`;
+
+ let pos=2;
+
+ window.carMove=function(d){
+
+  if(d==="left")pos--;
+  else pos++;
+
+  if(pos<0)pos=0;
+  if(pos>4)pos=4;
+
+  let crash=Math.random()<.18;
+
+  document.getElementById("carm").innerText=
+  crash?"💥 CRASH! फिर खेलें!":
+  "🚗 Position: "+(pos+1);
+ };
+}
+
+/* =========================
+ SPACE
+========================= */
+
+function spaceGame(){
+
+ let score=0;
+
+ area.innerHTML=`
+ <div class="big">🚀</div>
+ <p>आसमान से आने वाले asteroid से बचें!</p>
+ <button class="choice" onclick="spaceMove('left')">⬅️</button>
+ <button class="choice" onclick="spaceMove('right')">➡️</button>
+ <div id="spm" class="msg">Score: 0</div>`;
+
+ window.spaceMove=function(){
+  if(Math.random()<.15){
+   document.getElementById("spm").innerText=
+   "💥 Game Over! Scor### AL ###
 #Template for AL projects for Dynamics 365 Business Central
 #launch.json folder
 .vscode/
